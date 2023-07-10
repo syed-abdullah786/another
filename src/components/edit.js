@@ -13,7 +13,7 @@ function Edit() {
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const data = queryParams.get('url');
-        axios.post("http://127.0.0.1:8000/edit/",data).then(response=>{
+        axios.post("http://abdullah17.pythonanywhere.com/edit/",data).then(response=>{
             setInfo(response.data)
             setShow(false)
           }).catch(e =>{
@@ -32,7 +32,7 @@ function Edit() {
         setModal(false)
        }
        const upload=()=>{
-        axios.post("http://127.0.0.1:8000/update/",info).then(response=>{
+        axios.post("http://abdullah17.pythonanywhere.com/update/",info).then(response=>{
             console.log(response.data)
        })}
   return (
