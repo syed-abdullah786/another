@@ -13,7 +13,7 @@ function Upload() {
         const formData = new FormData();
   formData.append('file', filedata);
         e.preventDefault();
-        axios.post("http://abdullah17.pythonanywhere.com/",formData).then(response=>{
+        axios.post("http://127.0.0.1:8000/",formData).then(response=>{
             console.log('hello',response)
             history.push('/properties');
           }).catch(e =>{

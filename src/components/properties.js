@@ -7,7 +7,7 @@ function Properties() {
     const [datas,setDatas] = useState([])
     const [show,setShow] = useState(true)
     useEffect(() => {
-        axios.get("http://abdullah17.pythonanywhere.com/").then(response=>{
+        axios.get("http://127.0.0.1:8000/").then(response=>{
             console.log('hello',response.data)
             setDatas(response.data)
             setShow(false)

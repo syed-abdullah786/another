@@ -9,7 +9,7 @@ function Crawl() {
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const data = queryParams.get('url');
-        axios.post("http://abdullah17.pythonanywhere.com/crawl/",data).then(response=>{
+        axios.post("http://127.0.0.1:8000/crawl/",data).then(response=>{
             setDatas(response.data)
             setShow(false)
           }).catch(e =>{

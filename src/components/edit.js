@@ -32,7 +32,7 @@ function Edit() {
         setModal(false)
        }
        const upload=()=>{
-        axios.post("http://abdullah17.pythonanywhere.com/update/",info).then(response=>{
+        axios.post("http://127.0.0.1:8000/update/",info).then(response=>{
             console.log(response.data)
        })}
   return (
