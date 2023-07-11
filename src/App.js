@@ -5,6 +5,8 @@ import Properties from './components/properties';
 import Edit from './components/edit';
 import Crawl from './components/crawl';
 import { Route, Switch } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -16,6 +18,7 @@ function App() {
         <Route exact path='/edit' component={Edit} />
   {/* <Route exact path="/" render={(props) => <Main sortBy="newest" {...props}/> }/>  */}
         </Switch>
+        <ToastContainer />
     </div>
   );
 }
