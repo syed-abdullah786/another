@@ -9,7 +9,7 @@ function Properties() {
     const [show,setShow] = useState(true)
     const [spin, setSpin] = useState(false);
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/").then(response=>{
+        axios.get("http://3.145.58.175:8000/").then(response=>{
             setDatas(response.data)
             setShow(false)
           }).catch(e =>{
@@ -20,7 +20,7 @@ function Properties() {
 
        const crawl=(id,url)=>{
         setSpin(id)
-        axios.post("http://127.0.0.1:8000/crawl/",url).then(response=>{    
+        axios.post("http://3.145.58.175:8000/crawl/",url).then(response=>{    
             history.push(`/crawl?url=${url.split('//')[1]}`, response.data)
           }).catch(e =>{
             notify22(e.message, "error");

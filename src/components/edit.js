@@ -27,7 +27,7 @@ function Edit() {
        }
        const upload=()=>{
         setSpin(true)
-        axios.post("http://127.0.0.1:8000/update/",info).then(response=>{
+        axios.post("http://3.145.58.175:8000/update/",info).then(response=>{
             notify22(response.data, "success");
             setSpin(false)
        }).catch(e =>{
