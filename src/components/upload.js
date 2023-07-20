@@ -19,7 +19,7 @@ function Upload() {
         e.preventDefault();
         const formData = new FormData();
         formData.append('file', filedata);
-        axios.post("http://3.145.58.175:8000/",formData).then(response=>{
+        axios.post("http://abdullah17.pythonanywhere.com/",formData).then(response=>{
             history.push('/properties');
           }).catch(e =>{
             notify22(e.message, "error");

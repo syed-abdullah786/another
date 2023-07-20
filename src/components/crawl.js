@@ -17,7 +17,7 @@ function Crawl() {
        },[]);
        const crawl=(i,url)=>{
         setSpin(i)
-        axios.post("http://3.145.58.175:8000/edit/",url).then(response=>{
+        axios.post("http://127.0.0.1:8000/edit/",url).then(response=>{
             history.push(`/edit?url=${url.split('//')[1]}`, response.data)
             setShow(false)
           }).catch(e =>{
