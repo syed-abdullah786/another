@@ -1,20 +1,35 @@
-import React, { useEffect, useState, useRef }  from 'react'
+import React, { useEffect, useState, useContext }  from 'react'
 import axios from 'axios';
 import { useLocation,useHistory } from 'react-router-dom';
 import { toast, Slide } from "react-toastify";
+import myContext from  './appContext'
+import ProgressBar from "react-bootstrap/ProgressBar";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function Edit() {
+    const {uniturl} = useContext(myContext);
     const location = useLocation();
-    const history = useHistory();
-    const data = location.state;
-    const [info , setInfo] = useState(data)
+    const queryParams = new URLSearchParams(location.search);
+    const UnitId = queryParams.get("id");
+    const [info , setInfo] = useState()
     const [modal , setModal] = useState(false)
     const [key , setKey] = useState('')
     const [value , setValue] = useState('')
     const [show,setShow] = useState(true)
     const [spin, setSpin] = useState(false) 
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
-            setShow(false)
+        axios
+      .get(`http://3.88.224.113:90/unitview/${UnitId}/`)
+      .then((response) => {
+        console.log('data',response.data)
+        setInfo(response.data)
+        setShow(false)
+      })
+      .catch((e) => {
+        notify22(e.message, "error");
+      });
+            
        },[]);
        const open=(k,v)=>{
         setKey(k)
@@ -27,10 +42,38 @@ function Edit() {
        }
        const upload=()=>{
         setSpin(true)
-        axios.post("http://127.0.0.1:8000/update/",info).then(response=>{
+        console.log('info',info)
+       
+        setLoading(5);
+        const intervalId = setInterval(() => {
+            setLoading(prevLoading => {
+              if (prevLoading < 90) {
+                return prevLoading + Math.floor(Math.random() * 2) + 1;
+              }
+              return prevLoading;
+            });
+          }, 2000); // Adjust the interval duration as needed
+
+
+
+        // setLoading((prevState) => {
+        //     if (prevState < 90) {
+        //         return prevState + Math.floor(Math.random() * 3) + 1;
+        //     }
+        //     return prevState; 
+        // });
+
+        axios.post("http://3.88.224.113:90/update/",info).then(response=>{
             notify22(response.data, "success");
+            clearInterval(intervalId);
+            setLoading(100)
             setSpin(false)
+            setTimeout(() => {
+                setLoading(false)
+            }, 2000);
+            
        }).catch(e =>{
+        setLoading(false);
         notify22(e.message, "error");
         setSpin(false)
       })
@@ -44,6 +87,12 @@ function Edit() {
     })
   return (
     <>
+    {loading && (
+        <div className="fixed z-10 w-full">
+          <ProgressBar animated now={loading} label={`${loading.toFixed(2)}%`} />
+        </div>
+      )}
+    {console.log('id',info)}
     {show ? (<div className="flex items-center justify-center h-screen"><div role="status">
     <svg aria-hidden="true" className="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
@@ -85,7 +134,8 @@ function Edit() {
 			</div>
 		</div>
 	</div>} 
-    <section className="antialiased bg-gray-100 text-gray-600 px-4">
+                      
+                      <section className="antialiased bg-gray-100 text-gray-600 px-4">
         <div className="flex flex-col justify-center py-8">
             <div className="w-full bg-white shadow-lg rounded-sm border border-gray-200">
                 <header className="px-5 py-4 border-b border-gray-100">
@@ -109,7 +159,7 @@ function Edit() {
                             </thead>
                             <tbody className="text-sm divide-y divide-gray-100">
                             {info && Object.keys(info).map((key) => (
-                            (key != 'Image_Path' && key != 'Image_Urls') ? (
+                            (key != 'image_paths' && key != 'image_urls' && key != 'id' && key != 'reality_user' && key != 'property' && key != 'status' && key != 'listing_id') ? (
                                 <tr key={key}>
                                  <td className="p2"> 
                                      <div className="flex items-center">
@@ -121,7 +171,7 @@ function Edit() {
                                      {/* <div className="text-left">{info[key]}</div> */}
                                  </td>
                                  <td className="p-2">
-                                 {(key === 'amenities' || key === 'description') ? null :  (<div className="text-lg text-left">
+                                 {(key != 'price') ? null :  (<div className="text-lg text-left">
                                  <button onClick={()=> open(key,info[key])} className="group relative py-[5px] px-3 overflow-hidden rounded-xl text-sm bg-green-500 text-white">
                                      Edit
                                      <div className="absolute inset-0 h-full w-full scale-0 rounded-2xl transition-all duration-300 group-hover:scale-100 group-hover:bg-white/30"></div>
@@ -150,9 +200,11 @@ function Edit() {
                                  </button>
                                  </div>
         </div>
-    </section></>)}
+    </section>
+    </>)}
             </>
   )
 }
+
 
 export default Edit
