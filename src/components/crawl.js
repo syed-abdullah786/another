@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import axios from "axios";
 import { useLocation, useHistory, BrowserRouter } from "react-router-dom";
 import { toast, Slide } from "react-toastify";
@@ -30,6 +30,7 @@ function Crawl() {
   const [password, setPassword] = useState("");
   const [isFirstRender, setIsFirstRender] = useState(true);
   const [total, setTotal] = useState(false);
+  const scrapCheckboxRef = useRef(null);
 
   // const debouncedSetShouldSendRequest = debounce(() => {
   //   setShouldSendRequest(false);
@@ -65,19 +66,20 @@ function Crawl() {
             }, 0);
             console.log("ScrapedStatusCount", ScrapedStatusCount);
             console.log("pendingStatusCount", pendingStatusCount);
-            const totalcount = pendingStatusCount * 2 + ScrapedStatusCount;
+            const totalcount = pendingStatusCount + ScrapedStatusCount;
             console.log("totalcount", totalcount);
             setTotal(totalcount);
           });
       })
       .catch((e) => {
-        notify22('No such Job id Present', "error");
+        notify22("No such Job id Present", "error");
         setSpin(false);
-        history.push(`/`)
+        history.push(`/`);
       });
   }, []);
 
   useEffect(() => {
+    let abc = false;
     console.log("pen", pen);
     const api = (intervalId) => {
       if (pen.length > 0) {
@@ -88,51 +90,58 @@ function Crawl() {
             setDatas(res.data);
             setShow(false);
             setIsFirstRender(false);
-            
-              if (res.data.some((item) => item.status === "pending")) {
-              } 
-              else if (
-                res.data.some((item) =>
-                  item.units?.some(
-                    (unit) =>
-                      unit.status === "scraped" || unit.status === "pending"
-                  )
-                )
-              ) {
-                const pendingStatusCount = res.data?.reduce((count, item) => {
-                  return (
-                    count +
-                    (item.units?.filter((unit) => unit.status === "pending")
-                      ?.length || 0)
-                  );
-                }, 0);
-                const ScrapedStatusCount = res.data?.reduce((count, item) => {
-                  return (
-                    count +
-                    (item.units?.filter((unit) => unit.status === "scraped")
-                      ?.length || 0)
-                  );
-                }, 0);
 
-                let a =
-                  ((pendingStatusCount * 2 + ScrapedStatusCount) / total) * 100;
-                console.log("a", 100 - a);
-                console.log("total", total);
-                console.log("ScrapedStatusCount", ScrapedStatusCount);
-                console.log("pendingStatusCount", pendingStatusCount);
-                if (100 - a >= 100) {
-                  setLoading(false);
-                } else if (100 - a < 5) {
-                  setLoading(5);
-                } else {
-                  setLoading(100 - a);
-                }
+            if (res.data.some((item) => item.status === "pending")) {
+            } else if (
+              res.data.some((item) =>
+                item.units?.some(
+                  (unit) =>
+                    unit.status === "scraped" || unit.status === "pending"
+                )
+              )
+            ) {
+              const pendingStatusCount = res.data?.reduce((count, item) => {
+                return (
+                  count +
+                  (item.units?.filter((unit) => unit.status === "pending")
+                    ?.length || 0)
+                );
+              }, 0);
+              const ScrapedStatusCount = res.data?.reduce((count, item) => {
+                return (
+                  count +
+                  (item.units?.filter((unit) => unit.status === "scraped")
+                    ?.length || 0)
+                );
+              }, 0);
+
+              let a =
+                ((pendingStatusCount + ScrapedStatusCount) / total) * 100;
+              console.log("a", 100 - a);
+              console.log("total", total);
+              console.log("ScrapedStatusCount", ScrapedStatusCount);
+              console.log("pendingStatusCount", pendingStatusCount);
+              if (100 - a >= 100) {
+                // setLoading(false);
+              } else if (100 - a < 5) {
+                abc = 5;
+                setLoading(5);
               } else {
-                console.log('else')
-                  clearInterval(intervalId);
-                
+                abc = 100 - a;
+                setLoading(100 - a);
               }
-            
+            } else {
+              clearInterval(intervalId);
+              console.log("else");
+              console.log("loading outer", abc);
+              if (abc != false) {
+                console.log("loading inner", loading);
+                setLoading(100);
+                setTimeout(() => {
+                  setLoading("");
+                }, 2000);
+              }
+            }
           })
           .catch((e) => {
             notify22(e.message, "error");
@@ -140,13 +149,13 @@ function Crawl() {
           });
       }
     };
-   
+
     const intervalId = setInterval(() => {
       api(intervalId);
     }, 10000);
-    return ()=>{
+    return () => {
       clearInterval(intervalId);
-    }
+    };
   }, [pen, total]);
 
   // useEffect(() => {
@@ -249,6 +258,20 @@ function Crawl() {
   //       });
   //     // history.push(`/edit?url=${data}`)
   //   };
+
+  const scrapAll = () => {
+    if(scrapCheckboxRef.current.checked){
+      const urlsArray = datas?.reduce((urls, item) => {
+        const unitUrls = item.units?.map(unit => unit.url) || [];
+        return [...urls, ...unitUrls];
+      }, []);
+      setCheckedItems(urlsArray);
+    }
+    else{
+      setCheckedItems([]);
+    }
+  }
+
   const handleCheckboxChange = (url) => {
     const isUrlChecked = checkedItems.includes(url);
 
@@ -260,30 +283,7 @@ function Crawl() {
       // If the URL is not in the array, add it
       setCheckedItems([...checkedItems, url]);
     }
-    // setCheckedItems((prevCheckedItems) => ({
-    //   ...prevCheckedItems,
-    //   [url]: !prevCheckedItems[url], // Toggle the checked status
-    // }));
   };
-  // const unit_detail = () => {
-  //   setSpin(true);
-  //   if (checkedItems.length == 0) {
-  //     setSpin(false);
-  //     notify22("No unit selected", "error");
-  //   } else {
-  //     axios.post("http://127.0.0.1:8000/multiupdate/", checkedItems)
-  //     .then((response) => {
-  //       // history.push(`/edit`, response.data);
-  //       console.log('data',response.data)
-  //       notify22(response.data, "success");
-  //       setSpin(false);
-  //     }).catch((e) => {
-  //       notify22("Listing not updated", "error");
-  //       setDetailspin(false)
-  //     })
-
-  //   }
-  // };
 
   const openmodal = () => {
     if (checkedItems.length == 0) {
@@ -320,8 +320,10 @@ function Crawl() {
             setModal(false);
             setUsername("");
             setPassword("");
-            console.log("checkedItems*2", checkedItems.length * 2);
-            setTotal(checkedItems.length * 2)
+            setTotal(checkedItems.length);
+            if (scrapCheckboxRef.current.checked) {
+              scrapCheckboxRef.current.checked = !scrapCheckboxRef.current.checked;
+            }
             // setLoadingItem(checkedItems.length);
             setCheckedItems([]);
             setShouldSendRequest(true);
@@ -340,7 +342,7 @@ function Crawl() {
     axios
       .post("http://3.88.224.113:90/edit/", url)
       .then((response) => {
-        console.log('data',response.data)
+        console.log("data", response.data);
         setUniturl(response.data);
         history.push(`/edit?id=${response.data.id}`);
         setDetailspin(false);
@@ -547,10 +549,82 @@ function Crawl() {
                 <h2 className="font-bold text-2xl mt-5 tracking-tight">
                   Crawled Properties
                 </h2>
-                <p className="font-bold">Your Job Id: <button className="py-1 cursor-default px-3 shadow-md no-underline rounded-full bg-blue-600 text-white font-sans font-semibold text-xs border-orange btn-primary">
-                              {jobId}
-                            </button></p>
+                <p className="font-bold">
+                  Your Job Id:{" "}
+                  <button className="py-1 cursor-default px-3 shadow-md no-underline rounded-full bg-blue-600 text-white font-sans font-semibold text-xs border-orange btn-primary">
+                    {jobId}
+                  </button>
+                </p>
               </div>
+
+              <div className="mt-4 w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[1rem]">
+                <div className="bg-white drop-shadow-md rounded-lg p-4 sm:p-6 xl:p-8 ">
+                  <div className="inline-block items-center">
+                    <div className="flex items-center justify-center">
+                      <p className="text-xl sm:text-xl leading-none font-bold text-gray-900">
+                        Total Units:
+                      </p>
+                      <p className="text-xl sm:text-xl leading-none font-bold text-gray-900">
+                        {datas?.reduce((count, item) => {
+                          return count + (item.units?.length || 0);
+                        }, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white drop-shadow-md rounded-lg p-4 sm:p-6 xl:p-8 ">
+                  <div className="inline-block items-center">
+                    <div className="flex items-center justify-center">
+                      <p className="text-xl sm:text-xl leading-none font-bold text-gray-900">
+                        Uploaded Units:
+                      </p>
+                      <p className="text-xl sm:text-xl leading-none font-bold text-gray-900">
+                        {datas?.reduce((count, item) => {
+                          return (
+                            count +
+                            (item.units?.filter(
+                              (unit) => unit.status === "uploaded"
+                            )?.length || 0)
+                          );
+                        }, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white drop-shadow-md rounded-lg p-4 sm:p-6 xl:p-8 ">
+                  <div className="inline-block items-center">
+                    <div className="flex items-center justify-center">
+                      <p className="text-xl sm:text-xl leading-none font-bold text-gray-900">
+                        Uploading Error:
+                      </p>
+                      <p className="text-xl sm:text-xl leading-none font-bold text-gray-900">
+                        {datas?.reduce((count, item) => {
+                          return (
+                            count +
+                            (item.units?.filter(
+                              (unit) => unit.status === "uploading error"
+                            )?.length || 0)
+                          );
+                        }, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4">
+              <label className="flex font-bold float-right flex items-center relative w-max cursor-pointer select-none">
+                Scrap All&nbsp;&nbsp;
+  <input type="checkbox" 
+  onChange={() => scrapAll()}
+  ref={scrapCheckboxRef}
+  className="input appearance-none transition-colors cursor-pointer w-14 h-7 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-blue-500 bg-red-500" />
+  <span className="absolute font-medium text-xs uppercase right-1 text-white"> NO</span>
+  <span className="absolute font-medium text-xs uppercase right-8 text-white"> YES </span>
+  <span className="w-7 h-7 right-7 absolute rounded-full transform transition-transform bg-gray-200" />
+</label>
+              </div>
+
               <div className="grid divide-y divide-neutral-200 border rounded-lg px-4 mx-auto mt-8">
                 {datas.map((innerArray, i) => (
                   <div key={i} className="py-3">
@@ -581,6 +655,7 @@ function Crawl() {
                           </svg>
                         </span>
                       </summary>
+
                       <table className="mt-3 min-w-max w-full table-auto border border-slate-300">
                         <thead>
                           <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
