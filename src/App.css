@@ -44,3 +44,6 @@
 input:checked ~ span:last-child {
   --tw-translate-x: 1.75rem; /* translate-x-7 */
 }
+.react-datetime-picker__wrapper{
+  border:0px!important;
+}
